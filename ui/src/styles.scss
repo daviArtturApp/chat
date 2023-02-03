@@ -1,0 +1,25 @@
+/* You can add global styles to this file, and also import other style files */
+
+body, html {
+   padding: none;
+   margin: 0;
+}
+* {
+   box-sizing: border-box;
+   margin: 0;
+   border: 0;
+   padding: 0;
+}
+
+ul {
+   list-style: none;
+}
+.container {
+   display: flex;
+   justify-content: center;
+   width: 100%;
+   min-height: 101vh;
+   height: 100%;
+   background-color: black;
+}
+

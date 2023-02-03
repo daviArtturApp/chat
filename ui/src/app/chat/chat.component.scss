@@ -1,0 +1,59 @@
+
+
+
+main {
+   flex: 1;
+   align-self: center;
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: center;
+   max-width: 30rem;
+   width: 100%;
+   background-color: white;
+   height: 30rem;
+}
+
+.connectionsList {
+   border-right: 1px solid black;
+   height: 100%;
+   text-align: center;
+   display: flex;
+   justify-content: flex-start;
+   align-items: center;
+   flex-flow: column nowrap;
+   width: 30%;
+
+   & > li {
+      border-bottom: 1px solid black;
+      padding: none;
+      width: 100%;
+      padding: .5rem;
+   }
+}
+
+
+.chat {
+   height: 100%;
+   width: 70%;
+   display: flex;
+}
+
+.chat > ul {
+   flex: 1;
+}
+
+.chat > div {
+   align-self: flex-end;
+   display: flex;
+   justify-content: space-between;
+   gap: 1rem;
+}
+
+input, button {
+   background-color: gray;
+   padding: .5rem;
+}
+
+input {
+   width: 80%;
+}
