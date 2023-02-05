@@ -3,9 +3,10 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
-import { ChatRepository, ChatSchema } from './mongo.model';
+import { Socket, Server } from 'socket.io';
 
 interface Message {
   userId: string;
@@ -18,70 +19,82 @@ interface SocketOfUsers {
   socketId: string;
 }
 
+interface SaveMessageForOffilneUser {
+  userId: string;
+  publisherId: string;
+  message: string;
+}
+
+class ChatRepository {
+  db: SaveMessageForOffilneUser[] = [];
+
+  saveMessageForUser(data: SaveMessageForOffilneUser) {
+    this.db.push(data);
+  }
+
+  recoveryMessages(userId: string) {
+    const recoveryMessages = this.db.filter((message) => {
+      if (message.userId === userId) {
+        return message;
+      }
+    });
+    console.log(this.db);
+
+    // this.db = this.db.filter((message) => {
+    //   if (message.userId !== userId) {
+    //     return message;
+    //   }
+    // });
+
+    return recoveryMessages;
+  }
+}
+
+interface SocketConnected {
+  userId: string;
+  socketId: string;
+}
+
 @WebSocketGateway(3001, { cors: { origin: '*' } })
-export class ChatGateway {
-  constructor(private repository: ChatRepository) {}
+export class ChatGateway implements OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
+  connectedSockets: SocketConnected[] = [];
+  repository = new ChatRepository();
 
   @SubscribeMessage('recovery')
-  async recoveryHistory(socket: Socket, connectionId: string) {
-    const history = await this.repository.getHistory({
+  async recoveryHistory(socket: Socket, userId: string) {
+    const recoveredMessages = this.repository.recoveryMessages(userId);
+    this.connectedSockets.push({
       socketId: socket.id,
-      connectionId,
+      userId,
     });
 
-    console.log(history);
+    socket.emit('receive-history', recoveredMessages);
+    console.log(this.connectedSockets);
   }
 
   @SubscribeMessage('send-message')
   async saveNewMessage(socket: Socket, message: Message) {
-    const conversation = await this.repository.saveMessage({
-      ...message,
-      socketId: socket.id,
+    this.repository.saveMessageForUser({
+      message: message.message,
+      userId: message.connectionId,
+      publisherId: message.userId,
     });
 
-    console.log(conversation);
-  }
-}
-@WebSocketGateway(3001, { cors: { origin: '*' } })
-export class AppController {
-  db: SocketOfUsers[] = [];
-
-  constructor(
-    @InjectModel('ChatSchema') private model: typeof ChatSchema,
-    repository: ChatRepository,
-  ) {}
-
-  @WebSocketServer()
-  private server: Socket;
-
-  @SubscribeMessage('register')
-  register(currentSocket: Socket, userId: string) {
-    const userHaveScoket = this.db.findIndex(
-      (socket) => socket.userId === userId,
+    const socketTo = this.connectedSockets.find(
+      (socket) => socket.userId === message.connectionId,
     );
-
-    if (userHaveScoket === -1) {
-      this.db.push({
-        socketId: currentSocket.id,
-        userId,
-      });
-    } else {
-      this.db[userHaveScoket].socketId = currentSocket.id;
-    }
-
-    console.log(this.db);
+    socket.to(socketTo?.socketId).emit('receive-message', {
+      from: message.userId,
+      to: message.connectionId,
+      message: message.message,
+    });
   }
 
-  @SubscribeMessage('send-message')
-  handleSendMessage(socket: Socket, message: Message) {
-    console.log(message);
-    console.log(this.db);
-
-    this.db.map((socket) => {
-      if (socket.userId === message.connectionId) {
-        console.log(`O user ${message.userId} enviou para ${socket.userId}`);
-        this.server.to(socket.socketId).emit('receive-message', message);
-      }
-    });
+  handleDisconnect(client: Socket) {
+    this.connectedSockets = this.connectedSockets.filter(
+      (clnt) => clnt.socketId !== client.id,
+    );
   }
 }

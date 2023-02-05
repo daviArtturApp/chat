@@ -24,6 +24,7 @@ main {
    width: 30%;
 
    & > li {
+      cursor: pointer;
       border-bottom: 1px solid black;
       padding: none;
       width: 100%;

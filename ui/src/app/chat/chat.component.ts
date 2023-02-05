@@ -39,6 +39,49 @@ export class ChatComponent {
   ngOnInit() {
     const socket = io.connect('http://localhost:3001');
     socket.id = this.userId!
+
+    socket.on('connect', () => {
+      socket.emit('recovery', this.userId);
+
+      socket.on('receive-history', (data: any) => {
+        var start = window.performance.now();
+        const connections: any = [[], []]
+        for (let a of data) {
+          if (!connections[0].includes(a.publisherId)) {
+            connections[0].push(a.publisherId)
+            connections[1].push({connectionId: a.publisherId, messages: []})
+          }
+        }
+
+        connections[1].forEach((cn: any) => {
+          data.forEach((message: any) => {
+            if (cn.connectionId === message.publisherId) {
+              cn.messages.push(message.message)
+            }
+          })
+        })
+
+
+        this.connections.forEach((cn) => {
+          connections[1].forEach((cv: any) => {
+            if (cn.id === cv.connectionId) {
+              cn.messages = cv.messages
+            }
+          })
+        })
+        var end = window.performance.now();
+        console.log(`Execution time: ${end - start} ms`);
+      });
+
+      socket.on('receive-message', (data: { from: string, to: string, message: string}) => {
+        this.connections.forEach((connection) => {
+          if (connection.id === data.from) {
+            connection.messages.push(data.message)
+          }
+        })
+      })
+    });
+  
     this.socket = socket;
 
     this.userId = this.route.snapshot.params['userId'];
@@ -46,7 +89,7 @@ export class ChatComponent {
   };
 
   selectNewConnection(connectionId: string) {
-    this.socket?.emit('recovery', connectionId)
+    this.currentConnection = this.connections[+connectionId - 1]
   };
 
   emitMessage() {
