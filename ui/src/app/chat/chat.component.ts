@@ -60,9 +60,6 @@ export class ChatComponent {
       socket.emit('recovery', this.userId);
 
       socket.on('receive-history', (data: History) => {
- 
-        const connections: any = [[], []]
-        
 
         data.connections.forEach((connection) => {
           console.log(connection)
@@ -71,6 +68,11 @@ export class ChatComponent {
             if (DN.id === connection.connectionId) {
               DN.messages = connection.messages
             }
+          })
+
+          this.connections[0].messages.push({
+            content: 'http://localhost:3000/other.svg',
+            type: 'file'
           })
         })
       });
@@ -103,7 +105,7 @@ export class ChatComponent {
     const formData = new FormData()
     formData.append('file', this.fileControl!.raw)
     console.log(this.fileControl?.raw, this.fileControl?.preview)
-    this.socket?.emit('send-file', [this.fileControl!.raw, 'filename'])
+    this.socket?.emit('send-file', [this.fileControl!.raw, 'other.svg'])
   }
 
   handleFile(ev: Event) {

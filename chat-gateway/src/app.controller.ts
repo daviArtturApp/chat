@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Get, Param, Controller, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { createWriteStream } from 'fs';
 import {
   SubscribeMessage,
   WebSocketGateway,
@@ -9,6 +8,8 @@ import {
 import { Model } from 'mongoose';
 import { Socket } from 'socket.io';
 import { ChatSchema } from './mongo.model';
+import { Response } from 'express';
+import { createWriteStream } from 'fs';
 
 interface Message {
   userId: string;
@@ -168,14 +169,24 @@ export class ChatGateway implements OnGatewayDisconnect {
     this.chatService.emitMessageForConnection(socket, message);
   }
 
-  // @SubscribeMessage('send-file')
-  // async handle(socket: Socket, file: any) {
-  //   console.log(file, 'aqui');
+  @SubscribeMessage('send-file')
+  async handle(socket: Socket, file: any) {
+    console.log(file, 'aqui');
 
-  //   createWriteStream(`./uploads/${file[1]}`).write(file[0]);
-  // }
+    createWriteStream(`./uploads/${file[1]}`).write(file[0]);
+  }
 
   handleDisconnect(socket: Socket) {
     this.chatService.removeConnectedSocket(socket);
+  }
+}
+
+@Controller()
+export class AppController {
+  @Get(':path')
+  getFile(@Param('path') path: string, @Res() res: Response) {
+    return res.sendFile(
+      `C:/Users/App Marketing/Desktop/code/chat-gateway/uploads/${path}`,
+    );
   }
 }
