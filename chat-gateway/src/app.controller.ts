@@ -98,6 +98,42 @@ export class ChatRepository {
 
     return recoveryMessages;
   }
+
+  async saveFile(data: SaveMessageForOffilneUser) {
+    const exist = (await this.chatModel
+      .findOne({ userId: data.userId })
+      .exec()) as any as IUser;
+
+    if (exist) {
+      let updatedMessageConnection = false;
+      let i = 0;
+      while (i < exist.connections.length) {
+        const currentConnection = exist.connections[i];
+        if (currentConnection.connectionId === data.publisherId) {
+          console.log('AQUI');
+          currentConnection.messages.push({
+            content: data.message,
+            type: 'file',
+          });
+          updatedMessageConnection = true;
+          await this.chatModel.updateOne({ userId: data.userId }, exist);
+        }
+        i++;
+      }
+
+      if (updatedMessageConnection) {
+        return;
+      }
+
+      exist.connections.push({
+        connectionId: data.publisherId,
+        messages: [{ content: data.message, type: 'file' }],
+      });
+
+      await this.chatModel.updateOne({ userId: data.userId }, exist);
+      return;
+    }
+  }
 }
 
 interface SocketConnected {
@@ -149,6 +185,14 @@ export class ChatService {
   async getHistory(userId: string) {
     return await this.repository.recoveryMessages(userId);
   }
+
+  async saveFile(filePath: string, publisherId: string, userId: string) {
+    return await this.repository.saveFile({
+      message: filePath,
+      publisherId,
+      userId,
+    });
+  }
 }
 
 @WebSocketGateway(3001, { cors: { origin: '*' } })
@@ -170,10 +214,16 @@ export class ChatGateway implements OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send-file')
-  async handle(socket: Socket, file: any) {
-    console.log(file, 'aqui');
-
-    createWriteStream(`./uploads/${file[1]}`).write(file[0]);
+  async handle(
+    socket: Socket,
+    data: { file: [Buffer, string]; userId: string; publisherId: string },
+  ) {
+    await this.chatService.saveFile(
+      data.file[1],
+      data.publisherId,
+      data.userId,
+    );
+    createWriteStream(`./uploads/${data.file[1]}`).write(data.file[0]);
   }
 
   handleDisconnect(socket: Socket) {
