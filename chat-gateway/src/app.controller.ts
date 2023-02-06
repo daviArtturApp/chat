@@ -1,22 +1,18 @@
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
-  OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Socket, Server } from 'socket.io';
+import { Model } from 'mongoose';
+import { Socket } from 'socket.io';
+import { ChatSchema } from './mongo.model';
 
 interface Message {
   userId: string;
   connectionId: string;
   message: string;
-}
-
-interface SocketOfUsers {
-  userId: string;
-  socketId: string;
 }
 
 interface SaveMessageForOffilneUser {
@@ -25,8 +21,12 @@ interface SaveMessageForOffilneUser {
   message: string;
 }
 
-class ChatRepository {
+export class ChatRepository {
   db: SaveMessageForOffilneUser[] = [];
+
+  constructor(
+    @InjectModel('ChatSchema') private chatModel: Model<typeof ChatSchema>,
+  ) {}
 
   saveMessageForUser(data: SaveMessageForOffilneUser) {
     this.db.push(data);
@@ -38,13 +38,6 @@ class ChatRepository {
         return message;
       }
     });
-    console.log(this.db);
-
-    // this.db = this.db.filter((message) => {
-    //   if (message.userId !== userId) {
-    //     return message;
-    //   }
-    // });
 
     return recoveryMessages;
   }
@@ -55,46 +48,68 @@ interface SocketConnected {
   socketId: string;
 }
 
-@WebSocketGateway(3001, { cors: { origin: '*' } })
-export class ChatGateway implements OnGatewayDisconnect {
-  @WebSocketServer()
-  server: Server;
-  connectedSockets: SocketConnected[] = [];
-  repository = new ChatRepository();
+@Injectable()
+export class ChatService {
+  private connectedSockets: SocketConnected[] = [];
 
-  @SubscribeMessage('recovery')
-  async recoveryHistory(socket: Socket, userId: string) {
-    const recoveredMessages = this.repository.recoveryMessages(userId);
-    this.connectedSockets.push({
-      socketId: socket.id,
-      userId,
-    });
+  constructor(private repository: ChatRepository) {}
 
-    socket.emit('receive-history', recoveredMessages);
-    console.log(this.connectedSockets);
-  }
-
-  @SubscribeMessage('send-message')
-  async saveNewMessage(socket: Socket, message: Message) {
-    this.repository.saveMessageForUser({
-      message: message.message,
-      userId: message.connectionId,
-      publisherId: message.userId,
-    });
-
-    const socketTo = this.connectedSockets.find(
+  emitMessageForConnection(socket: Socket, message: Message) {
+    const socketOfConnection = this.connectedSockets.find(
       (socket) => socket.userId === message.connectionId,
     );
-    socket.to(socketTo?.socketId).emit('receive-message', {
+    socket.to(socketOfConnection?.socketId).emit('receive-message', {
       from: message.userId,
       to: message.connectionId,
       message: message.message,
     });
   }
 
-  handleDisconnect(client: Socket) {
+  saveNewMessage(message: Message) {
+    this.repository.saveMessageForUser({
+      message: message.message,
+      userId: message.connectionId,
+      publisherId: message.userId,
+    });
+  }
+
+  insertSocket(socket: Socket, userId: string) {
+    this.connectedSockets.push({
+      socketId: socket.id,
+      userId,
+    });
+  }
+
+  removeConnectedSocket(socket: Socket) {
     this.connectedSockets = this.connectedSockets.filter(
-      (clnt) => clnt.socketId !== client.id,
+      (client) => client.socketId !== socket.id,
     );
+  }
+
+  getHistory(userId: string) {
+    return this.repository.recoveryMessages(userId);
+  }
+}
+
+@WebSocketGateway(3001, { cors: { origin: '*' } })
+export class ChatGateway implements OnGatewayDisconnect {
+  connectedSockets: SocketConnected[] = [];
+
+  constructor(private chatService: ChatService) {}
+
+  @SubscribeMessage('recovery')
+  async recoveryHistory(socket: Socket, userId: string) {
+    this.chatService.insertSocket(socket, userId);
+    socket.emit('receive-history', this.chatService.getHistory(userId));
+  }
+
+  @SubscribeMessage('send-message')
+  async saveNewMessage(socket: Socket, message: Message) {
+    this.chatService.saveNewMessage(message);
+    this.chatService.emitMessageForConnection(socket, message);
+  }
+
+  handleDisconnect(socket: Socket) {
+    this.chatService.removeConnectedSocket(socket);
   }
 }

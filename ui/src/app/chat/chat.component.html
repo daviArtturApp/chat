@@ -3,10 +3,10 @@
 
    <main>
 
-      <ul class="connectionsList" *ngIf="connections">
+      <ul class="connectionsList" *ngIf="connections[0]">
          <li 
             *ngFor="let connection of connections"
-            (click)="selectNewConnection(connection.id)"
+            (click)="selectNewConnection(connection.id, $event)"
             >
             {{ connection.name }}
          </li>
@@ -17,12 +17,13 @@
          <h2 *ngIf="currentConnection">{{ currentConnection.name }}</h2>
          <ul>
             <li *ngFor="let message of currentConnection.messages">
-               <p>{{ message }}</p>
+               <p class="to">{{ message }}</p>
             </li>
          </ul>
 
          <div>
-            <input [formControl]="inputControl" type="text" name="" id="">
+            <textarea [formControl]="inputControl" placeholder="Escreva uma mensagem" type="text" name="" id="">
+            </textarea>
             <button (click)="emitMessage()">ENVIAR</button>
          </div>
       </div>
