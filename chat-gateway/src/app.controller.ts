@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { createWriteStream } from 'fs';
 import {
   SubscribeMessage,
   WebSocketGateway,
@@ -21,6 +22,22 @@ interface SaveMessageForOffilneUser {
   message: string;
 }
 
+interface Messages {
+  type: MessageType;
+  content: string;
+}
+
+interface IUser {
+  userId: string;
+  connections: [
+    {
+      connectionId: string;
+      messages: Messages[];
+    },
+  ];
+}
+type MessageType = 'file' | 'string';
+
 export class ChatRepository {
   db: SaveMessageForOffilneUser[] = [];
 
@@ -28,16 +45,55 @@ export class ChatRepository {
     @InjectModel('ChatSchema') private chatModel: Model<typeof ChatSchema>,
   ) {}
 
-  saveMessageForUser(data: SaveMessageForOffilneUser) {
-    this.db.push(data);
+  async saveMessageForUser(data: SaveMessageForOffilneUser, type: MessageType) {
+    const exist = (await this.chatModel
+      .findOne({ userId: data.userId })
+      .exec()) as any as IUser;
+
+    if (exist) {
+      let updatedMessageConnection = false;
+      let i = 0;
+      while (i < exist.connections.length) {
+        const currentConnection = exist.connections[i];
+        if (currentConnection.connectionId === data.publisherId) {
+          console.log('AQUI');
+          currentConnection.messages.push({ content: data.message, type });
+          updatedMessageConnection = true;
+          await this.chatModel.updateOne({ userId: data.userId }, exist);
+        }
+        i++;
+      }
+
+      if (updatedMessageConnection) {
+        return;
+      }
+
+      exist.connections.push({
+        connectionId: data.publisherId,
+        messages: [{ content: data.message, type }],
+      });
+
+      await this.chatModel.updateOne({ userId: data.userId }, exist);
+      return;
+    }
+
+    await this.chatModel.create({
+      userId: data.userId,
+      connections: [
+        {
+          connectionId: data.publisherId,
+          messages: [{ content: data.message, type }],
+        },
+      ],
+    });
+
+    console.log(exist);
+
+    // this.db.push(data);
   }
 
-  recoveryMessages(userId: string) {
-    const recoveryMessages = this.db.filter((message) => {
-      if (message.userId === userId) {
-        return message;
-      }
-    });
+  async recoveryMessages(userId: string) {
+    const recoveryMessages = await this.chatModel.findOne({ userId });
 
     return recoveryMessages;
   }
@@ -65,12 +121,15 @@ export class ChatService {
     });
   }
 
-  saveNewMessage(message: Message) {
-    this.repository.saveMessageForUser({
-      message: message.message,
-      userId: message.connectionId,
-      publisherId: message.userId,
-    });
+  async saveNewMessage(message: Message, type: MessageType) {
+    await this.repository.saveMessageForUser(
+      {
+        message: message.message,
+        userId: message.connectionId,
+        publisherId: message.userId,
+      },
+      type,
+    );
   }
 
   insertSocket(socket: Socket, userId: string) {
@@ -86,8 +145,8 @@ export class ChatService {
     );
   }
 
-  getHistory(userId: string) {
-    return this.repository.recoveryMessages(userId);
+  async getHistory(userId: string) {
+    return await this.repository.recoveryMessages(userId);
   }
 }
 
@@ -100,14 +159,21 @@ export class ChatGateway implements OnGatewayDisconnect {
   @SubscribeMessage('recovery')
   async recoveryHistory(socket: Socket, userId: string) {
     this.chatService.insertSocket(socket, userId);
-    socket.emit('receive-history', this.chatService.getHistory(userId));
+    socket.emit('receive-history', await this.chatService.getHistory(userId));
   }
 
   @SubscribeMessage('send-message')
   async saveNewMessage(socket: Socket, message: Message) {
-    this.chatService.saveNewMessage(message);
+    await this.chatService.saveNewMessage(message, 'string');
     this.chatService.emitMessageForConnection(socket, message);
   }
+
+  // @SubscribeMessage('send-file')
+  // async handle(socket: Socket, file: any) {
+  //   console.log(file, 'aqui');
+
+  //   createWriteStream(`./uploads/${file[1]}`).write(file[0]);
+  // }
 
   handleDisconnect(socket: Socket) {
     this.chatService.removeConnectedSocket(socket);

@@ -12,12 +12,7 @@ const Connections = new Schema({
   messages: [Messages],
 });
 
-const User = new Schema({
+export const ChatSchema = new Schema({
   userId: String,
   connections: [Connections],
-});
-
-export const ChatSchema = new Schema({
-  socketId: String,
-  chats: [User],
 });

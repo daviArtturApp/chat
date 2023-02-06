@@ -1,19 +1,30 @@
 import { Component } from '@angular/core';
 import { FormControl , Validators } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
+
 import * as io from "socket.io-client"
+
+interface Message {
+  type: string;
+  content: string;
+}
+
+interface ConnectionHistory {
+  connectionId: string;
+  messages: Message[]
+}
+
+interface History {
+  userId: string;
+  connections: ConnectionHistory[]
+}
 
 interface Connection {
   id: string;
   name: string;
-  messages: string[];
+  messages: Message[];
 };
-
-interface Message {
-  userId: string;
-  connectionId: string;
-  message: string;
-}
 
 @Component({
   selector: 'app-chat',
@@ -30,14 +41,13 @@ export class ChatComponent {
     { id: '3', name: 'User 3', messages: [] }
   ];
 
-
-
+  fileControl: { preview: string; raw: File } | null = null;
   inputControl = new FormControl('Olá', [Validators.required]);
   currentConnection: Connection = this.connections[0];
-  activeChat: HTMLLIElement | null = null
+  activeChat: HTMLLIElement | null = null;
   userId: string | undefined;
 
-  constructor(private route: ActivatedRoute) { }
+  constructor(private route: ActivatedRoute, private sanitizer: DomSanitizer) { }
 
   ngOnInit() {
     const socket = io.connect('http://localhost:3001');
@@ -49,27 +59,17 @@ export class ChatComponent {
     socket.on('connect', () => {
       socket.emit('recovery', this.userId);
 
-      socket.on('receive-history', (data: any) => {
+      socket.on('receive-history', (data: History) => {
+ 
         const connections: any = [[], []]
-        for (let a of data) {
-          if (!connections[0].includes(a.publisherId)) {
-            connections[0].push(a.publisherId)
-            connections[1].push({connectionId: a.publisherId, messages: []})
-          }
-        }
+        
 
-        connections[1].forEach((cn: any) => {
-          data.forEach((message: any) => {
-            if (cn.connectionId === message.publisherId) {
-              cn.messages.push(message.message)
-            }
-          })
-        })
+        data.connections.forEach((connection) => {
+          console.log(connection)
 
-        this.connections.forEach((cn) => {
-          connections[1].forEach((cv: any) => {
-            if (cn.id === cv.connectionId) {
-              cn.messages = cv.messages
+          this.connections.forEach((DN) => {
+            if (DN.id === connection.connectionId) {
+              DN.messages = connection.messages
             }
           })
         })
@@ -78,7 +78,7 @@ export class ChatComponent {
       socket.on('receive-message', (data: { from: string, to: string, message: string}) => {
         this.connections.forEach((connection) => {
           if (connection.id === data.from) {
-            connection.messages.push(data.message)
+            connection.messages.push({type: 'string', content: data.message})
           }
         })
       })
@@ -95,8 +95,23 @@ export class ChatComponent {
   emitMessage() {
     const message = this.inputControl.value as string
     const currentConnection = this.connections[+this.currentConnection.id - 1];
-    currentConnection.messages.push(message);
+    currentConnection.messages.push({type: 'string', content: message});
     this.socket?.emit('send-message', { userId: this.userId, connectionId: this.currentConnection.id, message })
+  }
+
+  emitFile() {
+    const formData = new FormData()
+    formData.append('file', this.fileControl!.raw)
+    console.log(this.fileControl?.raw, this.fileControl?.preview)
+    this.socket?.emit('send-file', [this.fileControl!.raw, 'filename'])
+  }
+
+  handleFile(ev: Event) {
+    const target = ev.target as HTMLInputElement
+    this.fileControl = {
+      preview: URL.createObjectURL(target.files![0]),
+      raw: target.files![0],
+    }
   }
 
   private switchClassNameOfActiveChat(ev: MouseEvent) {
@@ -104,6 +119,5 @@ export class ChatComponent {
     const element = ev.target as HTMLLIElement;
     element.classList.add('active-chat')
     this.activeChat = element
-
   }
 } 

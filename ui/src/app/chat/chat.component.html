@@ -1,8 +1,5 @@
 <div class="container">
-
-
    <main>
-
       <ul class="connectionsList" *ngIf="connections[0]">
          <li 
             *ngFor="let connection of connections"
@@ -12,25 +9,29 @@
          </li>
       </ul>
 
-
       <div class="chat">
          <h2 *ngIf="currentConnection">{{ currentConnection.name }}</h2>
          <ul>
             <li *ngFor="let message of currentConnection.messages">
-               <p class="to">{{ message }}</p>
+               <div *ngIf="message.type === 'string'; then string else file"></div>
+               <ng-template #string>
+                  <p >{{ message.content }}</p>
+               </ng-template>
+               <ng-template #file>
+                  <img src="http://asd" />
+               </ng-template>
             </li>
          </ul>
 
          <div>
-            <textarea [formControl]="inputControl" placeholder="Escreva uma mensagem" type="text" name="" id="">
+            <textarea [formControl]="inputControl" placeholder="Escreva uma mensagem" type="text" name="text" id="">
             </textarea>
+            <input type="file" (change)="handleFile($event)"/>
+            <button (click)="emitFile()">ENVIAR FOTO</button>
             <button (click)="emitMessage()">ENVIAR</button>
          </div>
       </div>
 
-
    </main>
-
-
-   
+   <div *ngIf="fileControl" class="foto-preview" [ngStyle]="{'background-image' : 'url('+ fileControl.preview +')'}"></div>
 </div>
