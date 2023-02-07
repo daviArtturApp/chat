@@ -1,20 +1,25 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
-import { Connection, History } from "./interfaces";
+
+export interface Connections {
+  id: number;
+  messages: {
+    type: string;
+    content: string
+  }[]
+}
+export interface ChatStructure {
+  index: number[];
+  messages: Connections[]
+}
 
 @Injectable()
 export class ChatState {
-   currentConection = new BehaviorSubject<Connection>({ id: '1', name: 'User 1', messages: [] })
+   currentConection = new BehaviorSubject<Connections>({ id: 3, messages: []})
    activeChat$ = new BehaviorSubject<HTMLLIElement | null>(null);
-   connections = new BehaviorSubject<Connection[]>(
-    [
-      { id: '1', name: 'User 1', messages: [] },
-      { id: '2', name: 'User 2', messages: [] },
-      { id: '3', name: 'User 3', messages: [] }
-    ]
-   );
+   connections = new BehaviorSubject<ChatStructure | null>(null);
 
-   setNewCurrentConnection(currentConnection: Connection) {
+   setNewCurrentConnection(currentConnection: Connections) {
      this.currentConection.next(currentConnection)
    }
  
@@ -36,22 +41,40 @@ export class ChatState {
     return this.connections.asObservable()
    }
 
-   updateMessageOfConections(data: History) {
-    console.log(data)
-    data.connections.forEach((connection) => {
-      this.connections.value.forEach((DN) => {
-        if (DN.id === connection.connectionId) {
-          DN.messages = connection.messages
-        }
-      })
-    })
-
+   updateMessageOfConections(data: {to: string; from: string; content: string; type: string;}[]) {
+    let structure: ChatStructure = {
+      index: [],
+      messages: []
+    }
+    let counter = 0;
+    while (counter < data.length) {
+      const currentData = data[counter];
+      const PK = +currentData.to + +currentData.from;
+      counter++
+      if (!structure.index.includes(PK)) {
+        structure.index.push(PK)
+        structure.messages.push(
+          {
+            id: PK, // alterar para PK - userId
+            messages: [{ type: currentData.type, content: currentData.content }]
+          }
+        )
+      } else {
+        structure.messages.forEach((messages) => {
+          if (messages.id === PK) {
+            messages.messages.push({ type: currentData.type, content: currentData.content })
+          }
+        })
+      }
+    }
+    this.connections.next(structure);
   }
 
-  updateMessageForUniqueConnection(data: { from: string, to: string, message: string}) {
-    this.connections.value.forEach((connection) => {
-      if (connection.id === data.from) {
-        connection.messages.push({type: 'string', content: data.message})
+  updateMessageForUniqueConnection(data: { from: string, to: string, message: string, type: string }) {
+    const pk = +data.from + +data.to
+    this.connections.value?.messages.forEach((connection) => {
+      if (connection.id === pk) {
+        connection.messages.push({type: data.type, content: data.message})
       }
     })
   }

@@ -2,9 +2,7 @@ import { Injectable } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { Socket } from 'ngx-socket-io';
 import { ChatState } from "../chat.state";
-import { EmitMessageDto, History, SendFileDto } from "../interfaces";
-
-
+import { EmitMessageDto, SendFileDto } from "../interfaces";
 @Injectable()
 export class ChatService {
 
@@ -13,28 +11,33 @@ export class ChatService {
          const userId = window.location.pathname.split('/')[2]
          this.socket.emit('recovery', userId);
 
-         this.socket.on('receive-history', (data: History) => {
+         this.socket.on('receive-history', (data: {to: string; from: string; content: string; type: string}[]) => {
             this.chatState.updateMessageOfConections(data)
          });
 
-         this.socket.on('receive-message', (data: { from: string, to: string, message: string}) => {
-            console.log('recebi')
+         this.socket.on('receive-message', (data: { from: string, to: string, message: string, type: string }) => {
             this.chatState.updateMessageForUniqueConnection(data)
          })
       });
    }
  
    emitMessage(dto: EmitMessageDto) {
-     this.socket.emit("send-message", dto)
+
+      const adapter = {
+         to: +dto.userId,
+         from: +dto.connectionId,
+         content: dto.message
+      }
+      this.socket.emit("send-message", adapter)
    }
    
-   emitFile(file: File, publisherId: string, userId: string) {
+   emitFile(file: File, publisherId: string, userId: number) {
      const formData = new FormData();
      formData.append('file', file);
-     const dto: SendFileDto = {
+     const dto = {
        file: [file, file.name],
-       publisherId,
-       userId
+       to: +publisherId,
+       from: userId
      }
      this.socket.emit('send-file', dto)
    }

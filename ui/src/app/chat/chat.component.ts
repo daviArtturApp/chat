@@ -2,10 +2,15 @@ import { Component } from '@angular/core';
 import { FormControl , Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import * as io from "socket.io-client"
-import { ChatState } from './chat.state';
+import { ChatState, ChatStructure } from './chat.state';
 import { Connection } from './interfaces';
 import { ChatService } from './services/chat.service';
 import { DownloadService } from './services/dowload.service';
+interface a {
+  id: number;
+  messages: { type: string, content: string }[];
+}
+
 
 @Component({
   selector: 'app-chat',
@@ -15,21 +20,18 @@ import { DownloadService } from './services/dowload.service';
 export class ChatComponent {
 
   socket: io.Socket | null = null
-  connections: Connection[] = [
-    { id: '1', name: 'User 1', messages: [] },
-    { id: '2', name: 'User 2', messages: [] },
-    { id: '3', name: 'User 3', messages: [] }
-  ];
+  connections: ChatStructure | null = null;
+  currentConnection: a | null = null;
 
   fileControl: { preview: string; raw: File } | null = null;
   inputControl = new FormControl('Olá', [Validators.required]);
-  currentConnection: Connection = this.connections[0];
   activeChat: HTMLLIElement | null = null;
   userId: string | undefined;
 
   constructor(private route: ActivatedRoute, private chatService: ChatService, private chatState: ChatState) {
 
     chatState.getCurrentConnection().subscribe((connection) => {
+      console.log(connection)
       this.currentConnection = connection
     });
 
@@ -38,34 +40,41 @@ export class ChatComponent {
     })
 
     chatState.getConnections().subscribe((connections) => {
-      this.connections = connections
+      if (connections) {
+        this.connections = connections
+      }
     })
   }
 
   ngOnInit() {
     this.userId = this.route.snapshot.params['userId'];
-    this.connections.forEach((cn) => { if (cn.id === this.userId) cn.name = 'Eu'})
+    //this.connections.forEach((cn) => { if (cn.id === this.userId) cn.name = 'Eu'})
   };
 
   selectNewConnection(connectionId: string, ev: MouseEvent) {
-    this.switchClassNameOfActiveChat(ev)
-    const newCurrentConnection = this.connections[+connectionId - 1]
-    this.chatState.setNewCurrentConnection(newCurrentConnection); 
+    const connection = this.connections?.messages.find((message) => 
+      message.id === +connectionId
+    );
+    this.switchClassNameOfActiveChat(ev);
+    this.chatState.setNewCurrentConnection(connection!); 
   };
 
   emitMessage() {
     const message = this.inputControl.value as string
-    this.chatState.setNewMessageForConnection(message)
+    this.chatState.setNewMessageForConnection(message);
     this.chatService.emitMessage({
       message,
-      connectionId: this.currentConnection.id,
-      userId: this.userId!
+      connectionId: this.currentConnection!.id.toString(),
+      userId: this.userId!,
     })
   }
 
   emitFile() {
-    this.currentConnection.messages.push({ type: 'file', content: this.fileControl?.preview! });
-    this.chatService?.emitFile(this.fileControl!.raw, this.userId!, this.currentConnection.id)
+    this.chatService?.emitFile(this.fileControl!.raw, this.userId!, this.currentConnection!.id);
+    
+    setTimeout(() => {
+      this.currentConnection?.messages.push({ type: 'file', content: this.fileControl?.raw.name! });
+    }, 2000)
   }
 
   downloadFile(event: MouseEvent) {
