@@ -151,6 +151,7 @@ export class ChatService {
     const socketOfConnection = this.connectedSockets.find(
       (socket) => socket.userId === message.connectionId,
     );
+    console.log(this.connectedSockets);
     socket.to(socketOfConnection?.socketId).emit('receive-message', {
       from: message.userId,
       to: message.connectionId,

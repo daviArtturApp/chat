@@ -53,6 +53,7 @@ main {
    flex-flow: column nowrap;
    flex: 1;
    gap: .2rem;
+   overflow-y: auto;
 }
 
 li {
@@ -61,6 +62,7 @@ li {
    p {
       border-radius: .5rem;
       padding: .3rem;
+      background-color: #cbcbcb;
    }
 }
 
@@ -102,14 +104,6 @@ button {
 
 button.button-file {
    right: 4rem;
-}
-
-.to, .from {
-   background-color: #e6e6e6;
-}
-
-.from {
-
 }
 
 .foto-preview {
