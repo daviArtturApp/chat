@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormControl , Validators } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 
 import * as io from "socket.io-client"
 
@@ -34,7 +35,8 @@ interface Connection {
 export class ChatComponent {
 
   socket: io.Socket | null = null
- 
+  chatService: ChatService | undefined;
+  chatState: ChatState;
   connections: Connection[] = [
     { id: '1', name: 'User 1', messages: [] },
     { id: '2', name: 'User 2', messages: [] },
@@ -47,11 +49,23 @@ export class ChatComponent {
   activeChat: HTMLLIElement | null = null;
   userId: string | undefined;
 
-  constructor(private route: ActivatedRoute, private sanitizer: DomSanitizer) { }
+  constructor(private route: ActivatedRoute, private sanitizer: DomSanitizer) {
+    const chatState = new ChatState()
+    this.chatState = chatState;
+
+    chatState.getCurrentConnection().subscribe((connection) => {
+      console.log(connection)
+      this.currentConnection = connection
+    });
+
+    chatState.getActiveChat().subscribe((chatElement) => {
+      this.activeChat = chatElement
+    })
+  }
 
   ngOnInit() {
     const socket = io.connect('http://localhost:3001');
-    socket.id = this.userId!
+    this.chatService = new ChatService(socket)
     this.userId = this.route.snapshot.params['userId'];
 
     this.connections.forEach((cn) => { if (cn.id === this.userId) cn.name = 'Eu'})
@@ -86,21 +100,29 @@ export class ChatComponent {
 
   selectNewConnection(connectionId: string, ev: MouseEvent) {
     this.switchClassNameOfActiveChat(ev)
-    this.currentConnection = this.connections[+connectionId - 1]
+    const newCurrentConnection = this.connections[+connectionId - 1]
+    this.chatState.setNewCurrentConnection(newCurrentConnection); 
   };
 
   emitMessage() {
     const message = this.inputControl.value as string
-    const currentConnection = this.connections[+this.currentConnection.id - 1];
-    currentConnection.messages.push({type: 'string', content: message});
-    this.socket?.emit('send-message', { userId: this.userId, connectionId: this.currentConnection.id, message })
+    this.currentConnection.messages.push({type: 'string', content: message});
+
+    this.chatService?.emitMessage({
+      message,
+      connectionId: this.currentConnection.id,
+      userId: this.userId!
+    })
   }
 
   emitFile() {
-    const formData = new FormData()
-    formData.append('file', this.fileControl!.raw)
-    console.log(this.fileControl?.raw, this.fileControl?.preview)
-    this.socket?.emit('send-file', {file: [this.fileControl!.raw, 'other.svg'], publisherId: this.userId, userId: this.currentConnection.id })
+    this.currentConnection.messages.push({ type: 'file', content: this.fileControl?.preview! });
+    this.chatService?.emitFile(this.fileControl!.raw, this.userId!, this.currentConnection.id)
+  }
+
+  async downloadFile(event: MouseEvent) {
+    const element$ = event.target as HTMLImageElement
+    await new DownloadService(element$.src).dowload()
   }
 
   handleFile(ev: Event) {
@@ -112,9 +134,95 @@ export class ChatComponent {
   }
 
   private switchClassNameOfActiveChat(ev: MouseEvent) {
-    this.activeChat?.classList.remove('active-chat')
     const element = ev.target as HTMLLIElement;
-    element.classList.add('active-chat')
-    this.activeChat = element
+    this.chatState.setNewActiveChat(element)
   }
-} 
+}
+
+type FileName = string;
+
+interface SendFileDto {
+  file: [File, FileName];
+  publisherId: string;
+  userId: string;
+}
+
+interface EmitMessageDto {
+  connectionId: string;
+  userId: string;
+  message: string;
+}
+
+class ChatService {
+
+  constructor(private socket: io.Socket) {
+
+  }
+
+  emitMessage(dto: EmitMessageDto) {
+    this.socket.emit("send-message", dto)
+  }
+  
+  emitFile(file: File, publisherId: string, userId: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const dto: SendFileDto = {
+      file: [file, file.name],
+      publisherId,
+      userId
+    }
+    this.socket.emit('send-file', dto)
+  }
+}
+
+class ChatState {
+  currentConection = new BehaviorSubject<Connection>({ id: '1', name: 'User 1', messages: [] })
+  activeChat$ = new BehaviorSubject<HTMLLIElement | null>(null);
+
+  setNewCurrentConnection(currentConnection: Connection) {
+    this.currentConection.next(currentConnection)
+  }
+
+  setNewActiveChat(element$: HTMLLIElement) {
+    this.activeChat$.value?.classList.remove('active-chat')
+    element$.classList.add('active-chat')
+    this.activeChat$.next(element$)
+  }
+
+  getActiveChat() {
+    return this.activeChat$.asObservable()
+  }
+
+  getCurrentConnection() {
+    return this.currentConection.asObservable()
+  }
+}
+
+class DownloadService {
+
+  constructor(private url: string) {}
+
+  async dowload() {
+    const objUrl = await this.createObjUrl();
+    const link$ = await this.createLinkElement(objUrl);
+    this.clickInElementForDownload(link$);
+  }
+
+  private async createObjUrl() {
+    const objUrl = window.URL.createObjectURL(await (await fetch(this.url)).blob())
+    return objUrl;
+  }
+
+  private async createLinkElement(objUrl: string) {
+    const link$ = document.createElement('a');
+    link$.href = objUrl;
+    link$.download = '';
+    return link$;
+  }
+
+  private clickInElementForDownload(link$: HTMLAnchorElement) {
+    document.body.appendChild(link$);
+    link$.click();
+    document.body.removeChild(link$);
+  }
+}

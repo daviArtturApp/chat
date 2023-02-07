@@ -18,7 +18,7 @@
                   <p >{{ message.content }}</p>
                </ng-template>
                <ng-template #file>
-                  <img class="file" src="http://localhost:3000/{{ message.content }}" />
+                  <img (click)="downloadFile($event)" class="file" src="http://localhost:3000/{{ message.content }}" />
                </ng-template>
             </li>
          </ul>
@@ -27,11 +27,12 @@
             <textarea [formControl]="inputControl" placeholder="Escreva uma mensagem" type="text" name="text" id="">
             </textarea>
             <input type="file" (change)="handleFile($event)"/>
-            <button (click)="emitFile()">ENVIAR FOTO</button>
+            <button class="button-file" (click)="emitFile()">ENVIAR FOTO</button>
             <button (click)="emitMessage()">ENVIAR</button>
          </div>
       </div>
 
+      
    </main>
    <div *ngIf="fileControl" class="foto-preview" [ngStyle]="{'background-image' : 'url('+ fileControl.preview +')'}"></div>
 </div>
