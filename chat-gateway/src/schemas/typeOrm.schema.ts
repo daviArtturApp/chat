@@ -26,7 +26,7 @@ interface SaveMessageDto {
    content: string;
 }
 @Injectable()
-export class ChatRepositoryy {
+export class ChatRepository {
    constructor(
       @InjectRepository(Chat)
       private photoRepository: Repository<Chat>,

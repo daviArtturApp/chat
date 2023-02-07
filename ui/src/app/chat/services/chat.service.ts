@@ -2,7 +2,9 @@ import { Injectable } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { Socket } from 'ngx-socket-io';
 import { ChatState } from "../chat.state";
-import { EmitMessageDto, SendFileDto } from "../interfaces";
+import { EmitMessageDto } from "../interfaces";
+
+
 @Injectable()
 export class ChatService {
 

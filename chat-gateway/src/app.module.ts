@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController, ChatGateway, ChatService } from './app.controller';
-import { Chat, ChatRepositoryy } from './schemas/typeOrm.schema';
+import { AppController } from './app.controller';
+import { ChatGateway } from './chat/chat.gateway';
+import { ChatService } from './chat/chat.service';
+import { Chat, ChatRepository } from './schemas/typeOrm.schema';
 
 @Module({
    imports: [
-      // MongooseModule.forRoot(
-      //   'mongodb+srv://root:root@cluster0.keevb0z.mongodb.net/?retryWrites=true&w=majority',
-      // ),
-      // MongooseModule.forFeature([{ name: 'ChatSchema', schema: ChatSchema }]),
       TypeOrmModule.forRoot({
          type: 'sqlite',
          database: './mydb.sql',
@@ -18,12 +16,6 @@ import { Chat, ChatRepositoryy } from './schemas/typeOrm.schema';
       TypeOrmModule.forFeature([Chat]),
    ],
    controllers: [AppController],
-   providers: [
-      ChatGateway,
-      // ChatRepository,
-      ChatGateway,
-      ChatService,
-      ChatRepositoryy,
-   ],
+   providers: [ChatGateway, ChatService, ChatRepository],
 })
 export class AppModule {}
