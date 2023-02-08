@@ -1,12 +1,13 @@
-import { UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserRepository } from 'src/domain/contracts/repositories';
 import { RoleEnum } from 'src/domain/interface';
+import { UserRepositoryInfra } from 'src/infra/repositories/user.repository';
 import { HashService } from './hash.service';
 
+@Injectable()
 export class AuthenticationService {
   constructor(
-    private repository: UserRepository,
+    private repository: UserRepositoryInfra,
     private hashService: HashService,
     private jwtService: JwtService,
   ) {}

@@ -9,13 +9,14 @@ import { AppComponent } from './app.component';
 import { ChatComponent } from './chat/chat.component';
 import { ChatState } from './chat/chat.state';
 import { ChatService } from './chat/services/chat.service';
-
+import { HttpClientModule } from '@angular/common/http';
 @NgModule({
   declarations: [
     AppComponent,
     ChatComponent,
   ],
   imports: [
+    HttpClientModule,
     BrowserModule,
     AppRoutingModule,
     ReactiveFormsModule,

@@ -1,5 +1,7 @@
+import { Injectable } from '@nestjs/common';
 import { HashAdapter } from '../contract/HashAdapter';
 
+@Injectable()
 export class HashService {
   constructor(private hashAdapter: HashAdapter) {}
 

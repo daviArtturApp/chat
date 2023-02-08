@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormControl , Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -11,6 +12,14 @@ interface a {
   messages: { type: string, content: string }[];
 }
 
+interface User {
+  email: string;
+  id: number;
+  name: string;
+  number: string;
+  password: string;
+}
+
 
 @Component({
   selector: 'app-chat',
@@ -22,13 +31,20 @@ export class ChatComponent {
   socket: io.Socket | null = null
   connections: ChatStructure | null = null;
   currentConnection: a | null = null;
-
   fileControl: { preview: string; raw: File } | null = null;
   inputControl = new FormControl('Olá', [Validators.required]);
   activeChat: HTMLLIElement | null = null;
   userId: string | undefined;
 
-  constructor(private route: ActivatedRoute, private chatService: ChatService, private chatState: ChatState) {
+
+  users: User[] | null = null
+
+  constructor(
+    private route: ActivatedRoute,
+    private chatService: ChatService,
+    private chatState: ChatState,
+    private httpClient: HttpClient
+  ) {
 
     chatState.getCurrentConnection().subscribe((connection) => {
       console.log(connection)
@@ -47,6 +63,9 @@ export class ChatComponent {
   }
 
   ngOnInit() {
+    this.httpClient.get<User[]>('http://localhost:3000/auth/users').subscribe((users) => {
+      this.users = users
+    })
     this.userId = this.route.snapshot.params['userId'];
     //this.connections.forEach((cn) => { if (cn.id === this.userId) cn.name = 'Eu'})
   };

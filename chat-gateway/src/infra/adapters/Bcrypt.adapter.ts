@@ -1,6 +1,8 @@
 import { HashAdapter } from 'src/application/contract/HashAdapter';
 import * as Bcrypt from 'bcrypt';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class BcryptAdapter implements HashAdapter {
   constructor(private bcrypt: typeof Bcrypt) {}
 
