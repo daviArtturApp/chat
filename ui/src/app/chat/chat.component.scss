@@ -4,16 +4,17 @@ main {
    display: flex;
    flex-flow: row nowrap;
    justify-content: center;
-   max-width: 30rem;
    width: 100%;
    background-color: white;
-   height: 30rem;
+   height: 100vh;
+   box-shadow: 0 0 5px black;
    border-radius: .5rem;
    font-family: sans-serif;
 }
 
 .container {
    background-color: #e6e6e6;
+   padding: 1rem;
 }
 
 .active-chat {
@@ -21,7 +22,7 @@ main {
 }
 
 .connectionsList {
-   border-right: 1px solid #cbcbcb;
+   border-right: 1px solid #969696;
    height: 100%;
    text-align: center;
    display: flex;
@@ -29,13 +30,26 @@ main {
    align-items: center;
    flex-flow: column nowrap;
    width: 30%;
+   background-color: #9fbbf4;
+   border-top-left-radius: .5rem;
+   border-bottom-left-radius: .5rem;
 
    & > li {
       cursor: pointer;
-      border-bottom: 1px solid #cbcbcb;
+      border-bottom: 1px solid #969696;
       padding: none;
       width: 100%;
       padding: .5rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+   }
+
+   & > li:first-of-type {
+      border-top-left-radius: 1rem;
+   }
+
+   & > li:last-of-type {
+      border-top-left-radius: 1rem;
    }
 }
 
@@ -72,10 +86,10 @@ li {
    justify-content: space-between;
    gap: 1rem;
    width: 100%;
-   border-top: 2px solid black;
+   border-top: 2px solid #969696;
    padding: .25rem;
    position: relative;
-   height: 7rem;
+   flex-flow: row nowrap;
 }
 
 textarea, button {
@@ -83,27 +97,24 @@ textarea, button {
 }
 
 textarea {
-   margin-bottom: 2.5rem;
    width: 100%;
    border: 0;
    word-break: keep-all;
    overflow-y: auto;
    outline: none;
    resize: none;
+   background-color: #e6e6e6;
+   border-radius: .5rem;
 }
 
 button {
    background-color: #0073b1;
-   border-radius: .5rem;
-   position: absolute;
-   bottom: .25rem;
-   right: .25rem;
    font-size: .7rem;
    font-weight: 700;
-}
-
-button.button-file {
-   right: 4rem;
+   height: 2rem;
+   width: 3rem;
+   padding: 0;
+   border-radius: 50%;
 }
 
 .foto-preview {
@@ -123,5 +134,14 @@ button.button-file {
 image {
    width: 400px;
    height: 400px;
-   
+}
+
+input[type*="file"] {
+   background-color: #0073b1;
+   border-radius: .5rem;
+   font-size: .7rem;
+   font-weight: 700;
+   height: 3rem;
+   width: 3rem;
+   //background-color: blue;
 }

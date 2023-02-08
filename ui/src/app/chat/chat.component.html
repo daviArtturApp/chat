@@ -5,7 +5,7 @@
             *ngFor="let user of users"
             (click)="selectNewConnection((user.id).toString(), $event)"
             >
-            {{ user.id + " " + user.name }}
+            {{ user.name }}
          </li>
       </ul>
 
@@ -27,8 +27,8 @@
             <textarea [formControl]="inputControl" placeholder="Escreva uma mensagem" type="text" name="text" id="">
             </textarea>
             <input type="file" (change)="handleFile($event)"/>
-            <button class="button-file" (click)="emitFile()">ENVIAR FOTO</button>
-            <button (click)="emitMessage()">ENVIAR</button>
+            <button class="button-file" (click)="emitFile()">FT</button>
+            <button (click)="emitMessage()">MS</button>
          </div>
       </div>
 
