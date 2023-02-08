@@ -18,6 +18,7 @@ interface User {
   name: string;
   number: string;
   password: string;
+  messages: { type: string, content: string }[]
 }
 
 
@@ -64,6 +65,9 @@ export class ChatComponent {
 
   ngOnInit() {
     this.httpClient.get<User[]>('http://localhost:3000/auth/users').subscribe((users) => {
+      users.forEach((user) => {
+        user.messages = []
+      })
       this.users = users
     })
     this.userId = this.route.snapshot.params['userId'];
@@ -71,6 +75,7 @@ export class ChatComponent {
   };
 
   selectNewConnection(connectionId: string, ev: MouseEvent) {
+    console.log(connectionId)
     const connection = this.connections?.messages.find((message) => 
       message.id === +connectionId
     );

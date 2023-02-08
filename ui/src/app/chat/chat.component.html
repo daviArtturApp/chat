@@ -1,11 +1,11 @@
 <div class="container">
    <main>
-      <ul class="connectionsList" *ngIf="connections">
+      <ul class="connectionsList" *ngIf="users">
          <li 
-            *ngFor="let connection of connections.index"
-            (click)="selectNewConnection(connection.toString(), $event)"
+            *ngFor="let user of users"
+            (click)="selectNewConnection(user.id.toString(), $event)"
             >
-            {{ connection - +userId! }}
+            {{ user.id - +userId! }}
          </li>
       </ul>
 
