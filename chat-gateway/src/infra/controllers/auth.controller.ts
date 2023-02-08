@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Post,
@@ -7,6 +8,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt/dist';
+import { AuthUserDto } from '../dtos/AuthUser.dto';
 import { JwtAuthGuard } from '../guards/local-auth.guard';
 import { Role } from '../interceptors/role.interceptor';
 import { Request } from '../interfaces';
@@ -16,7 +18,7 @@ export class AuthController {
   constructor(private jwtService: JwtService) {}
 
   @Post()
-  async handleCredentials() {
+  async handleCredentials(@Body() dto: AuthUserDto) {
     //const userData = await this.authService.compareCredentials();
     //return this.jwtService.sign(userData);
   }

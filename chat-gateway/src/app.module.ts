@@ -18,7 +18,7 @@ import { AuthModule } from './infra/modules/auth.module';
     TypeOrmModule.forFeature([Chat]),
     AuthModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [ChatGateway, ChatService, ChatRepository],
 })
 export class AppModule {}
