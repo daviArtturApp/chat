@@ -13,8 +13,7 @@ export class ChatService {
          const userId = window.location.pathname.split('/')[2]
          this.socket.emit('recovery', userId);
 
-         this.socket.on('receive-history', (data: {to: string; from: string; content: string; type: string}[]) => {
-            console.log(data)
+         this.socket.on('receive-history', (data: { to: string; from: string; content: string; type: string}[]) => {
             this.chatState.updateMessageOfConections(data)
          });
 

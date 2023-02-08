@@ -2,11 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormControl , Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import * as io from "socket.io-client"
-import { ChatState, ChatStructure } from './chat.state';
-import { Connection } from './interfaces';
+import { ChatState } from './chat.state';
 import { ChatService } from './services/chat.service';
 import { DownloadService } from './services/dowload.service';
+
 interface a {
   id: number;
   messages: { type: string, content: string }[];
@@ -30,15 +29,10 @@ interface User {
 })
 export class ChatComponent {
 
-  socket: io.Socket | null = null
-  connections: ChatStructure | null = null;
   currentConnection: a | null = null;
   fileControl: { preview: string; raw: File } | null = null;
   inputControl = new FormControl('Olá', [Validators.required]);
-  activeChat: HTMLLIElement | null = null;
   userId: string | undefined;
-
-
   users: User[] | null = null
 
   constructor(
@@ -49,19 +43,8 @@ export class ChatComponent {
   ) {
 
     chatState.getCurrentConnection().subscribe((connection) => {
-      console.log(connection)
       this.currentConnection = connection
     });
-
-    chatState.getActiveChat().subscribe((chatElement) => {
-      this.activeChat = chatElement
-    })
-
-    chatState.getConnections().subscribe((connections) => {
-      if (connections) {
-        this.connections = connections
-      }
-    })
 
     chatState.getUsers().subscribe((users) => {
       if (users) {
@@ -72,15 +55,13 @@ export class ChatComponent {
 
   ngOnInit() {
     this.httpClient.get<User[]>('http://localhost:3000/auth/users').subscribe((users) => {
-      users.forEach((user) => {
-        user.messages = [];
-
-        if (user.id === +this.userId!) {
-          user.name = 'Eu'
-        }
+      const newUsers = users.filter((user) => {
+        user.messages = []
+        return user.id !== +this.userId!
       })
-      this.users = users
-      this.chatState.setUsers(users)
+
+      this.users = newUsers
+      this.chatState.setUsers(newUsers)
     })
     this.userId = this.route.snapshot.params['userId'];
   };
@@ -101,6 +82,7 @@ export class ChatComponent {
       connectionId: this.currentConnection!.id.toString(),
       userId: this.userId!,
     })
+    this.inputControl.setValue('')
   }
 
   emitFile() {

@@ -7,11 +7,6 @@ import { Socket } from 'socket.io';
 import { createWriteStream } from 'fs';
 import { ChatService } from './chat.service';
 
-interface SocketConnected {
-  userId: string;
-  socketId: string;
-}
-
 @WebSocketGateway(3001, { cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayDisconnect {
   constructor(private chatService: ChatService) {}
