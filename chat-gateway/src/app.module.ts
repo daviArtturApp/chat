@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
 import { ChatGateway } from './chat/chat.gateway';
 import { ChatService } from './chat/chat.service';
 import { Chat, ChatRepository } from './schemas/typeOrm.schema';
@@ -18,7 +17,7 @@ import { AuthModule } from './infra/modules/auth.module';
     TypeOrmModule.forFeature([Chat]),
     AuthModule,
   ],
-  controllers: [AppController],
+  //controllers: [AppController],
   providers: [ChatGateway, ChatService, ChatRepository],
 })
 export class AppModule {}

@@ -5,7 +5,7 @@ export class BcryptAdapter implements HashAdapter {
   constructor(private bcrypt: typeof Bcrypt) {}
 
   encode(password: string): string {
-    const salt = 'receive from .env';
+    const salt = 10;
     const hashedPassword = this.bcrypt.hashSync(password, salt);
     return hashedPassword;
   }

@@ -1,5 +1,5 @@
 import { User } from '../entity/User';
 
 export interface UserRepository {
-  findOneById(userId: string): Promise<User | null>;
+  findOneByEmail(email: string): Promise<User | null>;
 }

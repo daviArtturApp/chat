@@ -8,6 +8,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt/dist';
+import { AuthenticationService } from 'src/application/services/authentication.service';
 import { AuthUserDto } from '../dtos/AuthUser.dto';
 import { JwtAuthGuard } from '../guards/local-auth.guard';
 import { Role } from '../interceptors/role.interceptor';
@@ -15,19 +16,18 @@ import { Request } from '../interfaces';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private jwtService: JwtService) {}
+  constructor(private authService: AuthenticationService) {}
 
   @Post()
   async handleCredentials(@Body() dto: AuthUserDto) {
-    //const userData = await this.authService.compareCredentials();
-    //return this.jwtService.sign(userData);
+    const token = await this.authService.authenticate(dto.email, dto.password);
+    return { token };
   }
 
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(new Role('USER'))
   @Get()
   decode(@Req() res: Request) {
-    console.log('aqui');
     return res.user;
   }
 }
