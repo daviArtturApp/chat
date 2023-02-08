@@ -1,0 +1,9 @@
+import { RoleEnum } from 'src/domain/interface';
+
+export class AuthorizationService {
+  constructor(private userRole: RoleEnum, private necessaryRole: RoleEnum) {}
+
+  authorizate() {
+    return this.userRole === this.necessaryRole ? true : false;
+  }
+}
