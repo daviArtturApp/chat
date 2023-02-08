@@ -10,6 +10,7 @@ import { DownloadService } from './services/dowload.service';
 interface a {
   id: number;
   messages: { type: string, content: string }[];
+  name: string;
 }
 
 interface User {
@@ -48,6 +49,7 @@ export class ChatComponent {
   ) {
 
     chatState.getCurrentConnection().subscribe((connection) => {
+      console.log(connection)
       this.currentConnection = connection
     });
 
@@ -88,7 +90,7 @@ export class ChatComponent {
       user.id === +connectionId
     );
     this.switchClassNameOfActiveChat(ev);
-    this.chatState.setNewCurrentConnection({ id: user!.id, messages: user!.messages}); 
+    this.chatState.setNewCurrentConnection({ id: user!.id, messages: user!.messages, name: user!.name }); 
   };
 
   emitMessage() {

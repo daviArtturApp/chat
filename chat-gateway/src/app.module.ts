@@ -15,6 +15,7 @@ import { AuthController } from './infra/controllers/auth.controller';
 import { HashService } from './application/services/hash.service';
 import { BcryptAdapter } from './infra/adapters/Bcrypt.adapter';
 import * as bcrypt from 'bcrypt';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -32,8 +33,7 @@ import * as bcrypt from 'bcrypt';
     TypeOrmModule.forFeature([UserEntity, Chat]),
     AuthModule,
   ],
-  //controllers: [AppController],
-  controllers: [AuthController],
+  controllers: [AuthController, AppController],
   providers: [
     ChatGateway,
     ChatService,

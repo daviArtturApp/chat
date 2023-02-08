@@ -36,7 +36,6 @@ export class ChatGateway implements OnGatewayDisconnect {
     socket: Socket,
     data: { file: [Buffer, string]; to: number; from: number },
   ) {
-    data.from = data.from - data.to;
     createWriteStream(`./uploads/${data.file[1]}`).write(data.file[0]);
 
     await this.chatService.saveFile(

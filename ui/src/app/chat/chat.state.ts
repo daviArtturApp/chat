@@ -7,10 +7,11 @@ export interface Connections {
     type: string;
     content: string
   }[]
+  name: string
 }
 export interface ChatStructure {
   index: number[];
-  messages: Connections[]
+  messages: Connections[];
 }
 
 interface User {
@@ -24,11 +25,12 @@ interface User {
 
 @Injectable()
 export class ChatState {
-   currentConection = new BehaviorSubject<Connections>({ id: 3, messages: []})
+   currentConection = new BehaviorSubject<Connections>({ id: 3, messages: [], name: 'Eu'})
    activeChat$ = new BehaviorSubject<HTMLLIElement | null>(null);
    connections = new BehaviorSubject<ChatStructure | null>(null);
    users = new BehaviorSubject<User[] | null>(null)
    setNewCurrentConnection(currentConnection: Connections) {
+    console.log(currentConnection)
      this.currentConection.next(currentConnection)
    }
  

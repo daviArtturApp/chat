@@ -10,7 +10,7 @@
       </ul>
 
       <div class="chat">
-         <h2 *ngIf="currentConnection">{{ currentConnection.id }}</h2>
+         <h2 *ngIf="currentConnection">{{ currentConnection.name }}</h2>
          <ul *ngIf="currentConnection">
             <li *ngFor="let message of currentConnection.messages">
                <div *ngIf="message.type === 'string'; then string else file"></div>
@@ -18,7 +18,7 @@
                   <p >{{ message.content }}</p>
                </ng-template>
                <ng-template #file>
-                  <img (click)="downloadFile($event)" class="file" src="http://localhost:3000/{{ message.content }}" />
+                  <img (click)="downloadFile($event)" class="file" src="http://localhost:3000/image/{{ message.content }}" />
                </ng-template>
             </li>
          </ul>
