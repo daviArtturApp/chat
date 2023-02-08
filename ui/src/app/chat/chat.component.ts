@@ -48,7 +48,6 @@ export class ChatComponent {
   ) {
 
     chatState.getCurrentConnection().subscribe((connection) => {
-      console.log(connection)
       this.currentConnection = connection
     });
 
@@ -61,30 +60,39 @@ export class ChatComponent {
         this.connections = connections
       }
     })
+
+    chatState.getUsers().subscribe((users) => {
+      if (users) {
+        this.users = users
+      }
+    })
   }
 
   ngOnInit() {
     this.httpClient.get<User[]>('http://localhost:3000/auth/users').subscribe((users) => {
       users.forEach((user) => {
-        user.messages = []
+        user.messages = [];
+
+        if (user.id === +this.userId!) {
+          user.name = 'Eu'
+        }
       })
       this.users = users
+      this.chatState.setUsers(users)
     })
     this.userId = this.route.snapshot.params['userId'];
-    //this.connections.forEach((cn) => { if (cn.id === this.userId) cn.name = 'Eu'})
   };
 
   selectNewConnection(connectionId: string, ev: MouseEvent) {
-    console.log(connectionId)
-    const connection = this.connections?.messages.find((message) => 
-      message.id === +connectionId
+    const user = this.users?.find((user) => 
+      user.id === +connectionId
     );
     this.switchClassNameOfActiveChat(ev);
-    this.chatState.setNewCurrentConnection(connection!); 
+    this.chatState.setNewCurrentConnection({ id: user!.id, messages: user!.messages}); 
   };
 
   emitMessage() {
-    const message = this.inputControl.value as string
+    const message = this.inputControl.value as string;
     this.chatState.setNewMessageForConnection(message);
     this.chatService.emitMessage({
       message,

@@ -14,8 +14,6 @@ interface SocketConnected {
 
 @WebSocketGateway(3001, { cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayDisconnect {
-  connectedSockets: SocketConnected[] = [];
-
   constructor(private chatService: ChatService) {}
 
   @SubscribeMessage('recovery')
@@ -29,8 +27,6 @@ export class ChatGateway implements OnGatewayDisconnect {
     socket: Socket,
     message: { to: number; from: number; content: string },
   ) {
-    message.from = message.from - message.to;
-
     await this.chatService.saveNewMessage(message);
     this.chatService.emitMessageForConnection(socket, message);
   }

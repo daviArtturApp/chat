@@ -14,17 +14,18 @@ export class ChatService {
          this.socket.emit('recovery', userId);
 
          this.socket.on('receive-history', (data: {to: string; from: string; content: string; type: string}[]) => {
+            console.log(data)
             this.chatState.updateMessageOfConections(data)
          });
 
-         this.socket.on('receive-message', (data: { from: string, to: string, message: string, type: string }) => {
+         this.socket.on('receive-message', (data: { from: number, to: number, message: string, type: string }) => {
             this.chatState.updateMessageForUniqueConnection(data)
          })
       });
    }
  
    emitMessage(dto: EmitMessageDto) {
-
+      console.log(dto)
       const adapter = {
          to: +dto.userId,
          from: +dto.connectionId,

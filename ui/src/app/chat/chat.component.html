@@ -3,9 +3,9 @@
       <ul class="connectionsList" *ngIf="users">
          <li 
             *ngFor="let user of users"
-            (click)="selectNewConnection(user.id.toString(), $event)"
+            (click)="selectNewConnection((user.id).toString(), $event)"
             >
-            {{ user.id - +userId! }}
+            {{ user.id + " " + user.name }}
          </li>
       </ul>
 
