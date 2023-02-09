@@ -1,19 +1,32 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { RoleEnum } from 'src/domain/interface';
 import { UserRepositoryInfra } from 'src/infra/repositories/user.repository';
 import { HashService } from './hash.service';
+import { TokenService } from './Token.service';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
     private repository: UserRepositoryInfra,
     private hashService: HashService,
-    private jwtService: JwtService,
+    private tokenService: TokenService,
   ) {}
 
   async authenticate(email: string, simplePassword: string) {
     const user = await this.repository.findOneByEmail(email);
+
+    if (!user) {
+      throw new HttpException(
+        'Usuário ou senha incorretos',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
     const hashedPassword = user.password;
     const compareResult = this.comparePassword(simplePassword, hashedPassword);
     return compareResult
@@ -23,15 +36,17 @@ export class AuthenticationService {
 
   private comparePassword(simplePassword: string, hashedPassword: string) {
     const result = this.hashService.compare(simplePassword, hashedPassword);
-    console.log(result, 'resultadp');
     return result;
   }
 
   private authorized(id: number, role: RoleEnum) {
-    return this.jwtService.sign({ id, role });
+    return this.tokenService.create(id);
   }
 
   private async unauthorized() {
-    throw new UnprocessableEntityException();
+    throw new HttpException(
+      'Usuário ou senha incorretos',
+      HttpStatus.NOT_FOUND,
+    );
   }
 }

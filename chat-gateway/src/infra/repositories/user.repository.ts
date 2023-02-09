@@ -26,7 +26,7 @@ export class UserEntity {
 }
 
 @Injectable()
-export class UserRepositoryInfra {
+export class UserRepositoryInfra implements UserRepository {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
