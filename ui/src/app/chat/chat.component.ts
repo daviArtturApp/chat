@@ -37,7 +37,6 @@ export class ChatComponent {
   users: User[] | null = null
 
   constructor(
-    private route: ActivatedRoute,
     private chatService: ChatService,
     private chatState: ChatState,
     private httpClient: HttpClient,

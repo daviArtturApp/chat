@@ -3,7 +3,7 @@ import { Socket } from 'socket.io';
 import { ChatRepository } from '../schemas/typeOrm.schema';
 
 interface SocketConnected {
-  userId: string;
+  userId: number;
   socketId: string;
 }
 
@@ -18,9 +18,8 @@ export class ChatService {
     message: { to: number; from: number; content: string },
   ) {
     const socketOfConnection = this.connectedSockets.find(
-      (socket) => socket.userId === message.from.toString(),
+      (socket) => socket.userId === message.from,
     );
-
     socket.to(socketOfConnection?.socketId).emit('receive-message', {
       from: message.to,
       to: message.from,
@@ -40,7 +39,7 @@ export class ChatService {
   insertSocket(socket: Socket, userId: string) {
     this.connectedSockets.push({
       socketId: socket.id,
-      userId,
+      userId: +userId,
     });
   }
 
@@ -59,7 +58,7 @@ export class ChatService {
     },
   ) {
     const socketOfConnection = this.connectedSockets.find(
-      (socket) => socket.userId === data.from.toString(),
+      (socket) => socket.userId === data.from,
     );
 
     socket.to(socketOfConnection?.socketId).emit('receive-message', {

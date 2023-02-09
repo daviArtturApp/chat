@@ -30,7 +30,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     socket: Socket,
     message: { to: number; from: number; content: string },
   ) {
-    await this.chatService.saveNewMessage(message);
+    //await this.chatService.saveNewMessage(message);
     this.chatService.emitMessageForConnection(socket, message);
   }
 
