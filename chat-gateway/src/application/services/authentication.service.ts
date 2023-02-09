@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { RoleEnum } from 'src/domain/interface';
 import { UserRepositoryInfra } from 'src/infra/repositories/user.repository';
 import { HashService } from './hash.service';

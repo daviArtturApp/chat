@@ -2,6 +2,7 @@ import { UserRepository } from 'src/domain/contracts/repositories';
 import { CreateUserDto, User } from 'src/domain/entity/User';
 
 export class UserRepositoryMock implements UserRepository {
+  callsCount = 0;
   constructor(
     private createUserDto: CreateUserDto,
     private throwError?: unknown,
@@ -12,6 +13,7 @@ export class UserRepositoryMock implements UserRepository {
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
+    this.callsCount++;
     if (email === this.createUserDto.email) {
       return new User(this.createUserDto);
     }
@@ -19,6 +21,7 @@ export class UserRepositoryMock implements UserRepository {
   }
 
   async findOneById(id: number): Promise<User | null> {
+    this.callsCount++;
     if (id === this.createUserDto.id) {
       return new User(this.createUserDto);
     }
@@ -26,6 +29,7 @@ export class UserRepositoryMock implements UserRepository {
   }
 
   async findAll(): Promise<User[]> {
+    this.callsCount++;
     return [new User(this.createUserDto)];
   }
 }

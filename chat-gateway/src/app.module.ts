@@ -16,6 +16,8 @@ import { HashService } from './application/services/hash.service';
 import { BcryptAdapter } from './infra/adapters/Bcrypt.adapter';
 import * as bcrypt from 'bcrypt';
 import { AppController } from './app.controller';
+import { TokenService } from './application/services/Token.service';
+import { JwtAdapter } from './infra/adapters/Jwt.adapter';
 
 @Module({
   imports: [
@@ -42,14 +44,18 @@ import { AppController } from './app.controller';
     UserRepositoryInfra,
     AuthenticationService,
     {
-      provide: JwtService,
-      useValue: new JwtService({
-        secret: '123123123123123',
-      }),
+      provide: HashService,
+      useValue: new HashService(new BcryptAdapter(bcrypt)),
     },
     {
-      provide: HashService,
-      useValue: new BcryptAdapter(bcrypt),
+      provide: TokenService,
+      useValue: new TokenService(
+        new JwtAdapter(
+          new JwtService({
+            secret: '123123123123123',
+          }),
+        ),
+      ),
     },
   ],
 })

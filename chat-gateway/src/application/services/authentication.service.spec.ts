@@ -18,17 +18,22 @@ const createUserDto: CreateUserDto = {
   password: '$2a$10$CcR2eX/yN2mUGa0B711xvOPRTvE4CdubqxpNOiVBUN1FCFtRDYKIi', // to equal "password"
 };
 
-const userRepositoryMock = new UserRepositoryMock(
-  createUserDto,
-) as unknown as UserRepositoryInfra;
-const hashService = new HashService(new BcryptAdapter(bcrypt));
-const tokenService = new TokenService(
-  new JwtAdapter(new JwtService({ secret: 'secret' })),
-);
 describe('test authentication service', () => {
+  let userRepositoryMock: UserRepositoryMock;
+  let hashService: HashService;
+  let tokenService: TokenService;
+
+  beforeEach(() => {
+    userRepositoryMock = new UserRepositoryMock(createUserDto);
+    hashService = new HashService(new BcryptAdapter(bcrypt));
+    tokenService = new TokenService(
+      new JwtAdapter(new JwtService({ secret: 'secret' })),
+    );
+  });
+
   it('should authenticate an user', async () => {
     const authService = new AuthenticationService(
-      userRepositoryMock,
+      userRepositoryMock as unknown as UserRepositoryInfra,
       hashService,
       tokenService,
     );
@@ -37,13 +42,14 @@ describe('test authentication service', () => {
       'password',
     );
 
+    expect(userRepositoryMock.callsCount === 1);
     expect(token).toBeTruthy();
     expect(typeof token).toBe('string');
   });
 
   it('should return a error 404 for wrong email', async () => {
     const authService = new AuthenticationService(
-      userRepositoryMock,
+      userRepositoryMock as unknown as UserRepositoryInfra,
       hashService,
       tokenService,
     );
@@ -55,13 +61,13 @@ describe('test authentication service', () => {
       error = err;
     }
 
+    expect(userRepositoryMock.callsCount === 1);
     expect(error).toBeInstanceOf(HttpException);
-    console.log(error.message);
   });
 
   it('should return a error 404 for wrong password', async () => {
     const authService = new AuthenticationService(
-      userRepositoryMock,
+      userRepositoryMock as unknown as UserRepositoryInfra,
       hashService,
       tokenService,
     );
@@ -73,7 +79,7 @@ describe('test authentication service', () => {
       error = err;
     }
 
+    expect(userRepositoryMock.callsCount === 1);
     expect(error).toBeInstanceOf(HttpException);
-    console.log(error.message);
   });
 });
