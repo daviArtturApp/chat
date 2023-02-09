@@ -27,7 +27,7 @@ export class AuthenticationService {
     return result;
   }
 
-  private authorized(id: string, role: RoleEnum) {
+  private authorized(id: number, role: RoleEnum) {
     return this.jwtService.sign({ id, role });
   }
 

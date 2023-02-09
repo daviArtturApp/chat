@@ -4,7 +4,7 @@ export class User {
   number: string;
   password: string;
   companyId?: string;
-  id: string;
+  id: number;
 
   constructor(dto: CreateUserDto) {
     this.name = dto.name;
@@ -21,6 +21,6 @@ export interface CreateUserDto {
   email: string;
   number: string;
   password: string;
-  id: string;
+  id: number;
   companyId?: string;
 }

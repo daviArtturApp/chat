@@ -11,7 +11,7 @@ export class AuthStrategy extends PassportStrategy(Strategy) {
       secretOrKey: '123123123123123',
     });
   }
-  async validate() {
-    return { userId: 'sd8f0vv038ng30', role: 'USER' };
+  async validate(a: any) {
+    return a;
   }
 }

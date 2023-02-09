@@ -7,7 +7,7 @@ import { Column, Entity, PrimaryGeneratedColumn, Repository } from 'typeorm';
 @Entity()
 export class UserEntity {
   @PrimaryGeneratedColumn('increment')
-  id: string;
+  id: number;
 
   @Column('text')
   name: string;
@@ -32,14 +32,16 @@ export class UserRepositoryInfra {
     private userRepository: Repository<UserEntity>,
   ) {}
 
+  async findOneById(id: number) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id,
+      },
+    });
+    return new User(user);
+  }
+
   async findOneByEmail(email: string) {
-    // await this.userRepository.insert({
-    //   email: 'teste3@gmail.com',
-    //   name: 'Davi',
-    //   number: '3799459999',
-    //   password: '$2b$10$jz7X3M7oP2tnAgN71/uyvOPGOWqWslNmcnsfuqrOKOhDsurqKP3WO',
-    //   companyId: '123123123',
-    // });
     const user = await this.userRepository.findOne({
       where: {
         email,

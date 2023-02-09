@@ -1,0 +1,14 @@
+<div class="container">
+  <form action="" (submit)="submitForm()" [formGroup]="formControl">
+    <label for="email">
+      Email
+      <input formControlName="email" type="text" name="email" id="email">
+    </label>
+
+    <label for="password">
+      Senha
+      <input formControlName="password" type="text" name="password" id="password">
+    </label>
+    <button type="submit">ENTRAR</button>
+  </form>
+</div>

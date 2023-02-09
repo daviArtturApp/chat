@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { Socket } from 'ngx-socket-io';
+import { UserState } from "src/app/app-routing.module";
 import { ChatState } from "../chat.state";
 import { EmitMessageDto } from "../interfaces";
 
@@ -8,10 +9,11 @@ import { EmitMessageDto } from "../interfaces";
 @Injectable()
 export class ChatService {
 
-   constructor(private socket: Socket, private chatState: ChatState, private route: ActivatedRoute) {
+   constructor(private userState: UserState, private socket: Socket, private chatState: ChatState, private route: ActivatedRoute, private router: Router) {
+      this.verifyToken()
       this.socket.on('connect', () => {
-         const userId = window.location.pathname.split('/')[2]
-         this.socket.emit('recovery', userId);
+         const userId = this.userState.getUserData()?.id.toString();
+         this.socket.emit('recovery', window.localStorage.getItem('token'));
 
          this.socket.on('receive-history', (data: { to: string; from: string; content: string; type: string}[]) => {
             this.chatState.updateMessageOfConections(data)
@@ -21,6 +23,12 @@ export class ChatService {
             this.chatState.updateMessageForUniqueConnection(data)
          })
       });
+   }
+
+   private verifyToken() {
+      if (!window.localStorage.getItem("token")) {
+         this.router.navigateByUrl('login')
+      }
    }
  
    emitMessage(dto: EmitMessageDto) {

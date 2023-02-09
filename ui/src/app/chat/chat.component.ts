@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormControl , Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { UserState } from '../app-routing.module';
 import { ChatState } from './chat.state';
 import { ChatService } from './services/chat.service';
 import { DownloadService } from './services/dowload.service';
@@ -39,7 +40,8 @@ export class ChatComponent {
     private route: ActivatedRoute,
     private chatService: ChatService,
     private chatState: ChatState,
-    private httpClient: HttpClient
+    private httpClient: HttpClient,
+    private userState: UserState
   ) {
 
     chatState.getCurrentConnection().subscribe((connection) => {
@@ -53,7 +55,7 @@ export class ChatComponent {
     })
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.httpClient.get<User[]>('http://localhost:3000/auth/users').subscribe((users) => {
       const newUsers = users.filter((user) => {
         user.messages = []
@@ -63,7 +65,7 @@ export class ChatComponent {
       this.users = newUsers
       this.chatState.setUsers(newUsers)
     })
-    this.userId = this.route.snapshot.params['userId'];
+    this.userId = this.userState.getUserData()?.id.toString();
   };
 
   selectNewConnection(connectionId: string, ev: MouseEvent) {

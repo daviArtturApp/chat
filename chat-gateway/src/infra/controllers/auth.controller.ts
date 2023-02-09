@@ -27,6 +27,12 @@ export class AuthController {
     return { token };
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('/user')
+  async withToken(@Req() req: Request) {
+    return await this.repo.findOneById(req.user.id);
+  }
+
   @Get('/users')
   async getAllUsers() {
     return await this.repo.findAll();

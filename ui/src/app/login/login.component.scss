@@ -1,0 +1,28 @@
+
+form {
+  align-self: center;
+  font-family: sans-serif;
+  max-width: 400px;
+  max-height: 400px;
+  height: 100%;
+  width: 100%;
+  background-color: gray;
+  display: flex;
+  flex-flow: column nowrap;
+  border-radius: .5rem;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+label {
+  display: flex;
+  flex-flow: column nowrap;
+  font-weight: 600;
+  width: 100%;
+}
+
+input, button {
+  padding: .5rem;
+  width: 100%;
+  border-radius: .25rem;
+}

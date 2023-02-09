@@ -6,15 +6,23 @@ import {
 import { Socket } from 'socket.io';
 import { createWriteStream } from 'fs';
 import { ChatService } from './chat.service';
+import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway(3001, { cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayDisconnect {
-  constructor(private chatService: ChatService) {}
+  constructor(
+    private chatService: ChatService,
+    private jwtService: JwtService,
+  ) {}
 
   @SubscribeMessage('recovery')
-  async recoveryHistory(socket: Socket, userId: string) {
-    this.chatService.insertSocket(socket, userId);
-    socket.emit('receive-history', await this.chatService.getHistory(userId));
+  async recoveryHistory(socket: Socket, token: string) {
+    const tokenPayload = this.jwtService.decode(token) as { id: string };
+    this.chatService.insertSocket(socket, tokenPayload.id);
+    socket.emit(
+      'receive-history',
+      await this.chatService.getHistory(tokenPayload.id),
+    );
   }
 
   @SubscribeMessage('send-message')
