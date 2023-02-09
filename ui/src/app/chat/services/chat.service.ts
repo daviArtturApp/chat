@@ -1,25 +1,29 @@
 import { Injectable } from "@angular/core";
-import { ActivatedRoute, Router } from "@angular/router";
+import { Router } from "@angular/router";
 import { Socket } from 'ngx-socket-io';
-import { UserState } from "src/app/app-routing.module";
 import { ChatState } from "../chat.state";
 import { EmitMessageDto } from "../interfaces";
 
+interface Message {
+   from: number,
+   to: number,
+   message: string,
+   type: string
+}
 
 @Injectable()
 export class ChatService {
 
-   constructor(private userState: UserState, private socket: Socket, private chatState: ChatState, private route: ActivatedRoute, private router: Router) {
+   constructor(private socket: Socket, private chatState: ChatState, private router: Router) {
       this.verifyToken()
       this.socket.on('connect', () => {
-         const userId = this.userState.getUserData()?.id.toString();
          this.socket.emit('recovery', window.localStorage.getItem('token'));
 
          this.socket.on('receive-history', (data: { to: string; from: string; content: string; type: string}[]) => {
             this.chatState.updateMessageOfConections(data)
          });
 
-         this.socket.on('receive-message', (data: { from: number, to: number, message: string, type: string }) => {
+         this.socket.on('receive-message', (data: Message) => {
             this.chatState.updateMessageForUniqueConnection(data)
          })
       });
@@ -32,13 +36,7 @@ export class ChatService {
    }
  
    emitMessage(dto: EmitMessageDto) {
-      console.log(dto)
-      const adapter = {
-         to: +dto.userId,
-         from: +dto.connectionId,
-         content: dto.message
-      }
-      this.socket.emit("send-message", adapter)
+      this.socket.emit("send-message", dto)
    }
    
    emitFile(file: File, publisherId: string, userId: number) {

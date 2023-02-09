@@ -28,7 +28,7 @@ export interface SendFileDto {
 }
 
 export interface EmitMessageDto {
-  connectionId: string;
-  userId: string;
-  message: string;
+  from: number;
+  to: number;
+  content: string;
 }

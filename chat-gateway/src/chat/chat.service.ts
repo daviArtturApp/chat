@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { ChatRepository } from '../schemas/typeOrm.schema';
+import { SendMessageDto } from './chat.gateway';
 
 interface SocketConnected {
   userId: number;
@@ -13,16 +14,11 @@ export class ChatService {
 
   constructor(private repository: ChatRepository) {}
 
-  emitMessageForConnection(
-    socket: Socket,
-    message: { to: number; from: number; content: string },
-  ) {
-    const socketOfConnection = this.connectedSockets.find(
-      (socket) => socket.userId === message.from,
-    );
+  emitMessageForConnection(socket: Socket, message: SendMessageDto) {
+    const socketOfConnection = this.findSocketByUserFrom(message.from);
     socket.to(socketOfConnection?.socketId).emit('receive-message', {
-      from: message.to,
-      to: message.from,
+      from: message.from,
+      to: message.to,
       message: message.content,
       type: 'string',
     });
@@ -49,17 +45,8 @@ export class ChatService {
     );
   }
 
-  emitFileForConnection(
-    socket: Socket,
-    data: {
-      content: string;
-      to: number;
-      from: number;
-    },
-  ) {
-    const socketOfConnection = this.connectedSockets.find(
-      (socket) => socket.userId === data.from,
-    );
+  emitFileForConnection(socket: Socket, data: SendMessageDto) {
+    const socketOfConnection = this.findSocketByUserFrom(data.from);
 
     socket.to(socketOfConnection?.socketId).emit('receive-message', {
       from: data.to,
@@ -79,5 +66,9 @@ export class ChatService {
       to,
       from,
     });
+  }
+
+  private findSocketByUserFrom(from: number) {
+    return this.connectedSockets.find((socket) => socket.userId === from);
   }
 }

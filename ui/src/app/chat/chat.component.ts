@@ -32,7 +32,7 @@ export class ChatComponent {
 
   currentConnection: a | null = null;
   fileControl: { preview: string; raw: File } | null = null;
-  inputControl = new FormControl('Olá', [Validators.required]);
+  inputControl = new FormControl('', [Validators.required]);
   userId: string | undefined;
   users: User[] | null = null
 
@@ -76,22 +76,19 @@ export class ChatComponent {
   };
 
   emitMessage() {
-    const message = this.inputControl.value as string;
-    this.chatState.setNewMessageForConnection(message);
+    const content = this.inputControl.value as string;
+    this.chatState.setNewMessageForConnection(content);
     this.chatService.emitMessage({
-      message,
-      connectionId: this.currentConnection!.id.toString(),
-      userId: this.userId!,
+      content,
+      from: +this.userId!,
+      to: this.currentConnection!.id,
     })
     this.inputControl.setValue('')
   }
 
   emitFile() {
-    this.chatService?.emitFile(this.fileControl!.raw, this.userId!, this.currentConnection!.id);
-    
-    setTimeout(() => {
-      this.currentConnection?.messages.push({ type: 'file', content: this.fileControl?.raw.name! });
-    }, 2000)
+    this.chatService.emitFile(this.fileControl!.raw, this.userId!, this.currentConnection!.id);
+    this.uploadImageInLocalCurrentChat()
   }
 
   downloadFile(event: MouseEvent) {
@@ -110,5 +107,13 @@ export class ChatComponent {
   private switchClassNameOfActiveChat(ev: MouseEvent) {
     const element = ev.target as HTMLLIElement;
     this.chatState.setNewActiveChat(element)
+  }
+
+  private uploadImageInLocalCurrentChat() {
+    setTimeout(() => {
+      this.currentConnection?.messages.push(
+        { type: 'file', content: this.fileControl?.raw.name! }
+      );
+    }, 2000)
   }
 }
